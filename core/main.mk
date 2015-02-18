@@ -509,6 +509,7 @@ subdir_makefiles := \
 ./frameworks/native/services/batteryservice/Android.mk \
 ./frameworks/native/cmds/servicemanager/Android.mk \
 ./frameworks/opt/emoji/Android.mk \
+./rpm/dhd/helpers/Android.mk \
 ./prebuilts/gcc/darwin-x86/arm/arm-linux-androideabi-4.6/Android.mk \
 ./prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.6/Android.mk \
 ./prebuilts/ndk/Android.mk \
