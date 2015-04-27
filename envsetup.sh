@@ -336,6 +336,29 @@ function choosetype()
 #
 function chooseproduct()
 {
+# Find the list of all products by looking for all AndroidProducts.mk files under the
+# device/, vendor/ and build/target/product/ directories and look for the format
+# LOCAL_DIR/<ProductSpecificFile.mk> and extract the name ProductSpecificFile from it.
+# This will give the list of all products that can be built using choosecombo
+    local -a prodlist
+
+# Find all AndroidProducts.mk files under the dirs device/, build/target/ and vendor/
+# Extract lines containing .mk from them
+# Extract lines containing LOCAL_DIR
+# Extract the name of the product specific file
+
+
+    prodlist=(`/usr/bin/find device/fairphone_devices device/qcom/msm8974 -name AndroidProducts.mk 2>/dev/null | \
+	    xargs grep -h \.mk| grep LOCAL_DIR| cut -d'/' -f2|cut -d' ' -f1|sort|uniq|cut -d'.' -f1`)
+
+    local index=1
+    local p
+    echo "Product choices are:"
+    for p in ${prodlist[@]}
+    do
+	    echo "     $index. $p"
+	    let "index = $index + 1"
+    done
     if [ "x$TARGET_PRODUCT" != x ] ; then
         default_value=$TARGET_PRODUCT
     else
@@ -354,9 +377,16 @@ function chooseproduct()
             ANSWER=$1
         fi
 
-        if [ -z "$ANSWER" ] ; then
-            export TARGET_PRODUCT=$default_value
-        else
+	if [ -z "$ANSWER" ] ; then
+		export TARGET_PRODUCT=$default_value
+	elif (echo -n $ANSWER | grep -q -e "^[0-9][0-9]*$") ; then
+		local poo=`echo -n $ANSWER`
+		if [ $poo -le ${#prodlist[@]} ] ; then
+			export TARGET_PRODUCT=${prodlist[$(($ANSWER-1))]}
+		else
+			echo "** Bad product selection: $ANSWER"
+		fi
+	else
             if check_product $ANSWER
             then
                 export TARGET_PRODUCT=$ANSWER
