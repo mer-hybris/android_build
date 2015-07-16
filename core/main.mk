@@ -279,7 +279,7 @@ TARGET_BUILD_JAVA_SUPPORT_LEVEL := platform
 
 # -----------------------------------------------------------------
 # The pdk (Platform Development Kit) build
-include build/core/pdk_config.mk
+#include build/core/pdk_config.mk
 
 # -----------------------------------------------------------------
 ###
@@ -495,10 +495,41 @@ ifneq ($(dont_bother),true)
 # Include all of the makefiles in the system
 #
 
+subdir_makefile_dirs := abi bionic bootable build device external hardware hybris libcore system
+
 # Can't use first-makefiles-under here because
 # --mindepth=2 makes the prunes not work.
 subdir_makefiles := \
-	$(shell build/tools/findleaves.py $(FIND_LEAVES_EXCLUDES) $(subdirs) Android.mk)
+./frameworks/base/Android.mk \
+./frameworks/native/cmds/dumpstate/Android.mk \
+./frameworks/native/cmds/dumpsys/Android.mk \
+./frameworks/native/libs/binder/Android.mk \
+./frameworks/native/libs/gui/Android.mk \
+./frameworks/native/libs/ui/Android.mk \
+./frameworks/native/opengl/libagl/Android.mk \
+./frameworks/native/opengl/libs/Android.mk \
+./frameworks/native/services/powermanager/Android.mk \
+./frameworks/native/services/sensorservice/Android.mk \
+./frameworks/native/services/surfaceflinger/Android.mk \
+./frameworks/native/services/batteryservice/Android.mk \
+./frameworks/native/cmds/servicemanager/Android.mk \
+./frameworks/opt/emoji/Android.mk \
+./frameworks/av/camera/Android.mk \
+./frameworks/av/media/libnbaio/Android.mk \
+./frameworks/av/media/common_time/Android.mk \
+./frameworks/av/media/libmedia/Android.mk \
+./frameworks/av/media/libstagefright/Android.mk \
+./frameworks/av/drm/libdrmframework/Android.mk \
+./frameworks/av/drm/common/Android.mk \
+./frameworks/av/services/camera/libcameraservice/Android.mk \
+./frameworks/av/media/libmediaplayerservice/Android.mk \
+./prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8/Android.mk \
+./prebuilts/ndk/Android.mk \
+./prebuilts/tools/Android.mk \
+$(shell build/tools/findleaves.py --prune=out --prune=.repo --prune=.git $(subdir_makefile_dirs) Android.mk)
+
+#./frameworks/native/services/connectivitymanager/Android.mk \
+# End of hybris mods
 
 $(foreach mk, $(subdir_makefiles), $(info including $(mk) ...)$(eval include $(mk)))
 
