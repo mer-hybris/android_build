@@ -523,6 +523,7 @@ subdir_makefiles := \
 ./frameworks/av/drm/common/Android.mk \
 ./frameworks/av/services/camera/libcameraservice/Android.mk \
 ./frameworks/av/media/libmediaplayerservice/Android.mk \
+./frameworks/av/services/audioflinger/Android.mk \
 ./prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8/Android.mk \
 ./prebuilts/ndk/Android.mk \
 ./prebuilts/tools/Android.mk \
