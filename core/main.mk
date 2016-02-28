@@ -519,14 +519,19 @@ subdir_makefiles := \
 ./frameworks/av/media/common_time/Android.mk \
 ./frameworks/av/media/libmedia/Android.mk \
 ./frameworks/av/media/libstagefright/Android.mk \
+./frameworks/av/media/utils/Android.mk \
+./frameworks/av/media/libavextensions/Android.mk \
 ./frameworks/av/drm/libdrmframework/Android.mk \
 ./frameworks/av/drm/common/Android.mk \
 ./frameworks/av/services/camera/libcameraservice/Android.mk \
 ./frameworks/av/media/libmediaplayerservice/Android.mk \
 ./frameworks/av/services/audioflinger/Android.mk \
-./prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.8/Android.mk \
+./frameworks/rs/cpp/Android.mk \
+./frameworks/compile/slang/Android.mk \
+./prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/Android.mk \
 ./prebuilts/ndk/Android.mk \
 ./prebuilts/tools/Android.mk \
+./prebuilts/sdk/tools/Android.mk \
 $(shell build/tools/findleaves.py --prune=out --prune=.repo --prune=.git $(subdir_makefile_dirs) Android.mk)
 
 #./frameworks/native/services/connectivitymanager/Android.mk \
