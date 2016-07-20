@@ -543,6 +543,8 @@ subdir_makefiles := \
 ./frameworks/av/media/libstagefright/Android.mk \
 ./frameworks/av/drm/libdrmframework/Android.mk \
 ./frameworks/av/drm/common/Android.mk \
+./frameworks/av/soundtrigger/Android.mk \
+./frameworks/av/services/audiopolicy/Android.mk \
 ./frameworks/av/services/camera/libcameraservice/Android.mk \
 ./frameworks/av/media/libmediaplayerservice/Android.mk \
 ./frameworks/av/services/audioflinger/Android.mk \
