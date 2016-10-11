@@ -29,6 +29,11 @@ import threading
 import time
 import zipfile
 
+try:
+  from backports import lzma;
+except ImportError:
+  lzma = None
+
 import blockimgdiff
 from rangelib import *
 
@@ -61,6 +66,10 @@ OPTIONS.tempfiles = []
 OPTIONS.device_specific = None
 OPTIONS.extras = {}
 OPTIONS.info_dict = None
+
+# Stash size cannot exceed cache_size * threshold.
+OPTIONS.cache_size = None
+OPTIONS.stash_threshold = 0.8
 
 
 # Values for "certificate" in apkcerts that mean special things.
@@ -1100,20 +1109,23 @@ def ComputeDifferences(diffs):
 
 
 class BlockDifference:
-  def __init__(self, partition, tgt, src=None, check_first_block=False):
+  def __init__(self, partition, tgt, src=None, check_first_block=False, version=None, use_lzma=False):
     self.tgt = tgt
     self.src = src
     self.partition = partition
     self.check_first_block = check_first_block
+    self.use_lzma = use_lzma
 
-    version = 1
-    if OPTIONS.info_dict:
-      version = max(
-          int(i) for i in
-          OPTIONS.info_dict.get("blockimgdiff_versions", "1").split(","))
+    if version is None:
+      version = 1
+      if OPTIONS.info_dict:
+        version = max(
+            int(i) for i in
+            OPTIONS.info_dict.get("blockimgdiff_versions", "1").split(","))
+    self.version = version
 
     b = blockimgdiff.BlockImageDiff(tgt, src, threads=OPTIONS.worker_threads,
-                                    version=version)
+                                    version=self.version, use_lzma=use_lzma)
     tmpdir = tempfile.mkdtemp()
     OPTIONS.tempfiles.append(tmpdir)
     self.path = os.path.join(tmpdir, partition)
@@ -1132,51 +1144,84 @@ class BlockDifference:
     self._WriteUpdate(script, output_zip)
 
   def WriteVerifyScript(self, script):
+    partition = self.partition
     if not self.src:
-      script.Print("Image %s will be patched unconditionally." % (self.partition,))
+      script.Print("Image %s will be patched unconditionally." % (partition,))
     else:
+      if self.version >= 3:
+        script.AppendExtra(('if (range_sha1("%s", "%s") == "%s" || '
+                            'block_image_verify("%s", '
+                            'package_extract_file("%s.transfer.list"), '
+                            '"%s.new.dat", "%s.patch.dat")) then') % (
+                            self.device, self.src.care_map.to_string_raw(),
+                            self.src.TotalSha1(),
+                            self.device, partition, partition, partition))
+      else:
+        script.AppendExtra('if range_sha1("%s", "%s") == "%s" then' %
+                            (self.device, self.src.care_map.to_string_raw(),
+                            self.src.TotalSha1()))
+      script.Print('Verified %s image...' % (partition,))
+      script.AppendExtra('else');
+
+      # When generating incrementals for the system and vendor partitions,
+      # explicitly check the first block (which contains the superblock) of
+      # the partition to see if it's what we expect. If this check fails,
+      # give an explicit log message about the partition having been
+      # remounted R/W (the most likely explanation) and the need to flash to
+      # get OTAs working again.
       if self.check_first_block:
         self._CheckFirstBlock(script)
 
-      script.AppendExtra('if range_sha1("%s", "%s") == "%s" then' %
-                         (self.device, self.src.care_map.to_string_raw(),
-                          self.src.TotalSha1()))
-      script.Print("Verified %s image..." % (self.partition,))
-      script.AppendExtra(('else\n'
-                          '  (range_sha1("%s", "%s") == "%s") ||\n'
-                          '  abort("%s partition has unexpected contents");\n'
-                          'endif;') %
-                         (self.device, self.tgt.care_map.to_string_raw(),
-                          self.tgt.TotalSha1(), self.partition))
+      # Abort the OTA update. Note that the incremental OTA cannot be applied
+      # even if it may match the checksum of the target partition.
+      # a) If version < 3, operations like move and erase will make changes
+      #    unconditionally and damage the partition.
+      # b) If version >= 3, it won't even reach here.
+      script.AppendExtra(('abort("%s partition has unexpected contents");\n'
+                          'endif;') % (partition,))
 
   def _WriteUpdate(self, script, output_zip):
     partition = self.partition
+    suffix = ".new.dat"
+
     with open(self.path + ".transfer.list", "rb") as f:
       ZipWriteStr(output_zip, partition + ".transfer.list", f.read())
-    with open(self.path + ".new.dat", "rb") as f:
-      ZipWriteStr(output_zip, partition + ".new.dat", f.read())
+    if lzma and self.use_lzma:
+      suffix += ".xz"
+      with open(self.path + suffix, "rb") as f:
+        ZipWriteStr(output_zip, partition + suffix, f.read(),
+                           compression=zipfile.ZIP_STORED)
+    else:
+      with open(self.path + suffix, "rb") as f:
+        ZipWriteStr(output_zip, partition + suffix, f.read())
     with open(self.path + ".patch.dat", "rb") as f:
       ZipWriteStr(output_zip, partition + ".patch.dat", f.read(),
                          compression=zipfile.ZIP_STORED)
 
     call = (('block_image_update("%s", '
              'package_extract_file("%s.transfer.list"), '
-             '"%s.new.dat", "%s.patch.dat");\n') %
-            (self.device, partition, partition, partition))
+             '"%s%s", "%s.patch.dat");\n') %
+            (self.device, partition, partition, suffix, partition))
     script.AppendExtra(script._WordWrap(call))
+
+  def _HashBlocks(self, source, ranges):
+    data = source.ReadRangeSet(ranges)
+    ctx = sha1()
+
+    for p in data:
+      ctx.update(p)
+
+    return ctx.hexdigest()
 
   def _CheckFirstBlock(self, script):
     r = RangeSet((0, 1))
-    h = sha1()
-    for data in self.src.ReadRangeSet(r):
-      h.update(data)
-    h = h.hexdigest()
+    srchash = self._HashBlocks(self.src, r);
 
     script.AppendExtra(('(range_sha1("%s", "%s") == "%s") || '
                         'abort("%s has been remounted R/W; '
                         'reflash device to reenable OTA updates");')
-                       % (self.device, r.to_string_raw(), h, self.device))
-
+                       % (self.device, r.to_string_raw(), srchash,
+                          self.device))
 
 DataImage = blockimgdiff.DataImage
 
