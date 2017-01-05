@@ -34,8 +34,8 @@ PRODUCT_PACKAGES += \
     LiveWallpapersPicker \
     MagicSmokeWallpapers \
     NoiseField \
-    PhaseBeam \
-    PhotoTable
+    PhaseBeam 
+#    PhotoTable
 
 # Additional settings used in all AOSP builds
 PRODUCT_PROPERTY_OVERRIDES := \
