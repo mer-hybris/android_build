@@ -896,6 +896,10 @@ vendorimage: $(INSTALLED_VENDORIMAGE_TARGET)
 
 .PHONY: bootimage
 bootimage: $(INSTALLED_BOOTIMAGE_TARGET)
+bootimage: $(INSTALLED_BOOTIMAGE_TARGET) aboot
+
+.PHONY: aboot
+aboot: $(TARGET_EMMC_BOOTLOADER)
 
 # phony target that include any targets in $(ALL_MODULES)
 .PHONY: all_modules
