@@ -520,7 +520,6 @@ subdir_makefiles := \
 ./frameworks/av/media/libmedia/Android.mk \
 ./frameworks/av/media/libstagefright/Android.mk \
 ./frameworks/av/media/utils/Android.mk \
-./frameworks/av/media/libavextensions/Android.mk \
 ./frameworks/av/drm/libdrmframework/Android.mk \
 ./frameworks/av/drm/common/Android.mk \
 ./frameworks/av/services/camera/libcameraservice/Android.mk \
@@ -535,6 +534,8 @@ subdir_makefiles := \
 $(shell build/tools/findleaves.py --prune=out --prune=.repo --prune=.git $(subdir_makefile_dirs) Android.mk)
 
 #./frameworks/native/services/connectivitymanager/Android.mk \
+Not available in AOSP:
+#./frameworks/av/media/libavextensions/Android.mk \
 # End of hybris mods
 
 $(foreach mk, $(subdir_makefiles), $(info including $(mk) ...)$(eval include $(mk)))
