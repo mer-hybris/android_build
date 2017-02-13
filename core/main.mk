@@ -495,7 +495,7 @@ ifneq ($(dont_bother),true)
 # Include all of the makefiles in the system
 #
 
-subdir_makefile_dirs := abi bionic bootable build device external hardware hybris libcore system
+subdir_makefile_dirs := abi bionic bootable build device external hardware hybris kernel libcore system vendor
 
 # Can't use first-makefiles-under here because
 # --mindepth=2 makes the prunes not work.
