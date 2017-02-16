@@ -626,7 +626,7 @@ else if get_stage("%(bcb_dev)s") == "3/3" then
 
   if not block_based:
     def output_sink(fn, data):
-      common.ZipWriteStr(output_zip, "recovery/" + fn, data)
+      common.ZipWriteStr(output_zip, "system/" + fn, data)
       system_items.Get("system/" + fn)
 
     common.MakeRecoveryPatch(OPTIONS.input_tmp, output_sink,
@@ -1360,7 +1360,7 @@ else
 
     if not target_has_recovery_patch:
       def output_sink(fn, data):
-        common.ZipWriteStr(output_zip, "recovery/" + fn, data)
+        common.ZipWriteStr(output_zip, "system/" + fn, data)
         system_items.Get("system/" + fn)
 
       common.MakeRecoveryPatch(OPTIONS.target_tmp, output_sink,
