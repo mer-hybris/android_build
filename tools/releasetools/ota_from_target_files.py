@@ -759,6 +759,7 @@ def WriteBlockIncrementalOTAPackage(target_zip, source_zip, output_zip):
       output_zip=output_zip,
       script=script,
       metadata=metadata,
+      full_radio=OPTIONS.full_radio,
       info_dict=OPTIONS.source_info_dict)
 
   # TODO: Currently this works differently from WriteIncrementalOTAPackage().
