@@ -426,6 +426,11 @@ subdir_makefiles_total := $(words $(subdir_makefiles))
 
 $(foreach mk,$(subdir_makefiles),$(info [$(call inc_and_print,subdir_makefiles_inc)/$(subdir_makefiles_total)] including $(mk) ...)$(eval include $(mk)))
 
+$(file >frajo.all.modules,$(ALL_MODULES))
+
+ALL_MODULES := $(HYBRIS_TARGETS)
+ALL_LINK_TYPES := $(foreach r,$(ALL_MODULES),$(shell echo $(filter %:%:$(r),$(ALL_LINK_TYPES))))
+
 ifdef PDK_FUSION_PLATFORM_ZIP
 # Bring in the PDK platform.zip modules.
 include $(BUILD_SYSTEM)/pdk_fusion_modules.mk
