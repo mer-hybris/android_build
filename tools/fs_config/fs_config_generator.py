@@ -135,7 +135,8 @@ class AID(object):
     _FIXUPS = {
         'media_drm': 'mediadrm',
         'media_ex': 'mediaex',
-        'media_codec': 'mediacodec'
+        'media_codec': 'mediacodec',
+        'dbus': 'adbus'
     }
 
     def __init__(self, identifier, value, found):
