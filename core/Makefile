@@ -26,6 +26,7 @@ $(if $(filter %.apk, $(call word-colon, 2, $(1))),$(error \
     Prebuilt apk found in PRODUCT_COPY_FILES: $(1), use BUILD_PREBUILT instead!))
 endef
 # filter out the duplicate <source file>:<dest file> pairs.
+ALL_PRODUCT_COPY_FILES :=
 unique_product_copy_files_pairs :=
 $(foreach cf,$(PRODUCT_COPY_FILES), \
     $(if $(filter $(unique_product_copy_files_pairs),$(cf)),,\
@@ -42,6 +43,7 @@ $(foreach cf,$(unique_product_copy_files_pairs), \
             $(eval $(call copy-xml-file-checked,$(_src),$(_fulldest))),\
             $(eval $(call copy-one-file,$(_src),$(_fulldest)))) \
         $(eval ALL_DEFAULT_INSTALLED_MODULES += $(_fulldest)) \
+        $(eval ALL_PRODUCT_COPY_FILES += $(_fulldest)) \
         $(eval unique_product_copy_files_destinations += $(_dest))))
 unique_product_copy_files_pairs :=
 unique_product_copy_files_destinations :=
@@ -1920,6 +1922,11 @@ INTERNAL_VENDORIMAGE_FILES := \
       $(ALL_DEFAULT_INSTALLED_MODULES)\
       $(ALL_PDK_FUSION_FILES))
 
+INTERNAL_VENDORIMAGE_KERNEL_MODULES := \
+    $(filter $(TARGET_OUT_VENDOR)/lib/modules/%,\
+      $(ALL_DEFAULT_INSTALLED_MODULES)\
+      $(ALL_PDK_FUSION_FILES))
+
 # platform.zip depends on $(INTERNAL_VENDORIMAGE_FILES).
 $(INSTALLED_PLATFORM_ZIP) : $(INTERNAL_VENDORIMAGE_FILES)
 
@@ -1949,7 +1956,7 @@ endef
 
 # We just build this directly to the install location.
 INSTALLED_VENDORIMAGE_TARGET := $(BUILT_VENDORIMAGE_TARGET)
-$(INSTALLED_VENDORIMAGE_TARGET): $(INTERNAL_USERIMAGES_DEPS) $(INTERNAL_VENDORIMAGE_FILES) $(INSTALLED_FILES_FILE_VENDOR) $(BUILD_IMAGE_SRCS) $(DEPMOD) $(BOARD_VENDOR_KERNEL_MODULES) $(INSTALLED_KERNEL_TARGET)
+$(INSTALLED_VENDORIMAGE_TARGET): $(INTERNAL_USERIMAGES_DEPS) $(ALL_PRODUCT_COPY_FILES) $(INTERNAL_VENDORIMAGE_KERNEL_MODULES) $(filter fstab%, $(product_MODULES)) $(filter ueventd%, $(product_MODULES)) $(BUILD_IMAGE_SRCS) $(DEPMOD) $(BOARD_VENDOR_KERNEL_MODULES) $(INSTALLED_KERNEL_TARGET)
 	$(build-vendorimage-target)
 
 .PHONY: vendorimage-nodeps vnod
